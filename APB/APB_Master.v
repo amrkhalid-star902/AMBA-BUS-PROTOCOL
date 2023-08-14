@@ -21,21 +21,20 @@ module APB_Master(
     PRDATA,
     PSLVERR
     
-    
 );
 
 
 
     //Default signal width
     parameter ADDR_WIDTH = 8;
-    parameter DATA_WIDTH = 8;
-    parameter SLAVES_NUM = 1;
+    parameter DATA_WIDTH = 16;
+    parameter SLAVES_NUM = 4;
     
     input PCLK , PRESETn , RW , transfer , PREADY;
     input [ADDR_WIDTH-1 : 0]  apb_address;
     input [DATA_WIDTH-1 : 0]  apb_write_data;
     input [DATA_WIDTH-1 : 0]  apb_read_data_out;
-    input [SLAVES_NUM-1 : 0]  SEL;
+    input [$clog2(SLAVES_NUM)-1 : 0]  SEL;
     
     output [SLAVES_NUM-1 : 0] PSEL;
     output reg PENABLE;
@@ -118,7 +117,7 @@ module APB_Master(
                 
                     PENABLE = 1'b0;
                     
-                    if(RW)
+                    if(!RW)
                     begin
                     
                         PADDR = apb_address;
@@ -155,7 +154,7 @@ module APB_Master(
                     if(|PSEL)
                     begin
                     
-                        PENABLE = 1'b0;
+                        PENABLE = 1'b1;
                         if(transfer && !PSLVERR)
                         begin
                         
@@ -342,7 +341,7 @@ module APB_Master(
             else
             begin
             
-                setup_error = 1'b1;
+                setup_error = 1'b0;
             
             end
             
