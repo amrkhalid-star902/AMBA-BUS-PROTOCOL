@@ -23,6 +23,7 @@ module AHB_Master(
     HPROT,
     HTRANS,
     HLOCK,
+    HREQ,
     HREADY,
     HWDATA,
     DOUT
@@ -49,6 +50,7 @@ module AHB_Master(
     output reg [3 : 0] HPROT;
     output reg [1 : 0] HTRANS;
     output reg HLOCK;
+    output reg HREQ;
     output reg HREADY;
     output reg [DATA_WIDTH-1 : 0] HWDATA;
     output reg [DATA_WIDTH-1 : 0] DOUT;
@@ -184,6 +186,7 @@ module AHB_Master(
             HPROT  <= 4'b0;
             HTRANS <= 2'b0;
             HLOCK  <= 1'b0;
+            HREQ   <= 1'b0;
             HREADY <= 1'b0;
             HWDATA <= {DATA_WIDTH{1'b0}};
             DOUT   <= {DATA_WIDTH{1'b0}};
@@ -198,6 +201,7 @@ module AHB_Master(
                 HADDR  <= addr;
                 HWRITE <= HWRITE;
                 HBURST <= HBURST;
+                HREQ   <= 1'b0;
                 HREADY <= 1'b0;
                 HWDATA <= HWDATA;
                 DOUT   <= DOUT;
@@ -210,6 +214,7 @@ module AHB_Master(
                 HADDR  <= addr;
                 HWRITE <= wr;
                 HBURST <= 3'b0;
+                HREQ   <= 1'b1;
                 HREADY <= 1'b1;
                 HWDATA <= data1 + data2;
                 DOUT   <= DOUT;
@@ -222,6 +227,7 @@ module AHB_Master(
                 HADDR  <= addr;
                 HWRITE <= wr;
                 HBURST <= 3'b0;
+                HREQ   <= 1'b1;
                 HREADY <= 1'b1;
                 HWDATA <= HWDATA;
                 DOUT   <= HRDATA;
@@ -234,6 +240,7 @@ module AHB_Master(
                 HADDR  <= addr;
                 HWRITE <= wr;
                 HBURST <= 3'b0;
+                HREQ   <= 1'b1;
                 HREADY <= 1'b1;
                 HWDATA <= data1 + data2;
                 DOUT   <= DOUT;
@@ -246,6 +253,7 @@ module AHB_Master(
                 HADDR  <= HADDR;
                 HWRITE <= HWRITE;
                 HBURST <= HBURST;
+                HREQ   <= 1'b0;
                 HREADY <= 1'b0;
                 HWDATA <= HWDATA;
                 DOUT   <= DOUT;
@@ -259,4 +267,3 @@ module AHB_Master(
     
 
 endmodule
-
