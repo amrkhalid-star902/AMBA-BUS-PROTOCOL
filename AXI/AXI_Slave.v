@@ -1464,15 +1464,413 @@ parameter MEMSIZE = 4096
                         
                         2'b01: begin
                         
+                            if(first_time2 == 1'b0)
+                            begin
                             
+                                readdata_address = ARADDR_r;
+                                first_time2_next = 1;
+                            
+                            end
+                            else begin
+                            
+                                first_time2_next = first_time2;
+                            
+                            end
+                            
+                            if(counter_next == ARLEN + 5'b1)
+                            begin
+                            
+                                first_time2_next = 1'b0;
+                            
+                            end
+                            else begin
+                                
+                                first_time2_next = first_time2;
+                            
+                            end
+                            
+                            case(ARSIZE)
+                            
+                                3'b000: begin
+                                
+                                    RDATA[7 : 0] = slave_memory[readdata_address];
+                                
+                                end
+                                
+                                3'b001: begin
+                                
+                                    RDATA[7 : 0]  = slave_memory[readdata_address];
+                                    RDATA[15 : 8] = slave_memory[readdata_address + 1];
+                                    readdata_address_r = readdata_address + 2;
+                                
+                                end
+                                
+                                3'b010: begin
+                                
+                                    RDATA[7 : 0]   = slave_memory[readdata_address];
+                                    RDATA[15 : 8]  = slave_memory[readdata_address + 1];
+                                    RDATA[23 : 16] = slave_memory[readdata_address + 2];
+                                    RDATA[31 : 24] = slave_memory[readdata_address + 3];
+                                    readdata_address_r = readdata_address + 4;
+                                
+                                end
+                            
+                            endcase//ARSIZE
                         
-                        end
+                        end//Increment
+                        
+                        2'b10: begin
+                        
+                            if(first_time2 == 1'b0)
+                            begin
+                            
+                                readdata_address = ARADDR_r;
+                                first_time2_next = 1;
+                            
+                            end
+                            else begin
+                            
+                                first_time2_next = first_time2;
+                            
+                            end
+                            
+                            if(counter_next == ARLEN + 5'b1)
+                            begin
+                            
+                                first_time2_next = 1'b0;
+                            
+                            end
+                            else begin
+                                
+                                first_time2_next = first_time2;
+                            
+                            end
+                            
+                            case(ARLEN)
+                            
+                                4'b0001: begin
+                                
+                                    case(ARSIZE)
+                                    
+                                        3'b000: begin
+                                        
+                                            wrap_boundary2 = 2 * 1;                                            
+                                        
+                                        end
+                                        
+                                        3'b001: begin
+                                        
+                                            wrap_boundary2 = 2 * 2;                                            
+                                        
+                                        end
+                                        
+                                        3'b010: begin
+                                        
+                                            wrap_boundary2 = 2 * 4;                                            
+                                        
+                                        end
+                                    
+                                    endcase//ARSIZE
+                                
+                                end//2-Beat Burst
+                                
+                                4'b0011: begin
+                                
+                                    case(ARSIZE)
+                                    
+                                        3'b000: begin
+                                        
+                                            wrap_boundary2 = 4 * 1;                                            
+                                        
+                                        end
+                                        
+                                        3'b001: begin
+                                        
+                                            wrap_boundary2 = 4 * 2;                                            
+                                        
+                                        end
+                                        
+                                        3'b010: begin
+                                        
+                                            wrap_boundary2 = 4 * 4;                                            
+                                        
+                                        end
+                                    
+                                    endcase//ARSIZE
+                                
+                                end//4-Beat Burst
+                                
+                                4'b0111: begin
+                                
+                                    case(ARSIZE)
+                                    
+                                        3'b000: begin
+                                        
+                                            wrap_boundary2 = 8 * 1;                                            
+                                        
+                                        end
+                                        
+                                        3'b001: begin
+                                        
+                                            wrap_boundary2 = 8 * 2;                                            
+                                        
+                                        end
+                                        
+                                        3'b010: begin
+                                        
+                                            wrap_boundary2 = 8 * 4;                                            
+                                        
+                                        end
+                                    
+                                    endcase//ARSIZE
+                                
+                                end//8-Beat Burst
+                                
+                                4'b1111: begin
+                                
+                                    case(ARSIZE)
+                                    
+                                        3'b000: begin
+                                        
+                                            wrap_boundary2 = 16 * 1;                                            
+                                        
+                                        end
+                                        
+                                        3'b001: begin
+                                        
+                                            wrap_boundary2 = 16 * 2;                                            
+                                        
+                                        end
+                                        
+                                        3'b010: begin
+                                        
+                                            wrap_boundary2 = 16 * 4;                                            
+                                        
+                                        end
+                                    
+                                    endcase//ARSIZE
+                                
+                                end//16-Beat Burst
+                            
+                            endcase//ARLEN
+                            
+                            case(ARSIZE)
+                            
+                                3'b000: begin
+                                
+                                    RDATA[7 : 0]       = slave_memory[readdata_address];
+                                    readdata_address_n = readdata_address + 1;
+                                    
+                                    if(readdata_address_n % wrap_boundary2 == 0)
+                                    begin
+                                    
+                                        readdata_address_r = readdata_address_n - wrap_boundary2; 
+                                    
+                                    end
+                                    else begin
+                                    
+                                        readdata_address_r = readdata_address_n;
+                                    
+                                    end
+                                
+                                end//1-Byte
+                                
+                                3'b001: begin
+                                
+                                    RDATA[7 : 0]       = slave_memory[readdata_address];
+                                    readdata_address_n = readdata_address + 1;
+                                    
+                                    if(readdata_address_n % wrap_boundary2 == 0)
+                                    begin
+                                    
+                                        readdata_address_r = readdata_address_n - wrap_boundary2; 
+                                    
+                                    end
+                                    else begin
+                                    
+                                        readdata_address_r = readdata_address_n;
+                                    
+                                    end
+                                    
+                                    RDATA[15 : 8]       = slave_memory[readdata_address_r];
+                                    readdata_address_n  = readdata_address_r + 1;
+                                    
+                                    if(readdata_address_n % wrap_boundary2 == 0)
+                                    begin
+                                    
+                                        readdata_address_r = readdata_address_n - wrap_boundary2; 
+                                    
+                                    end
+                                    else begin
+                                    
+                                        readdata_address_r = readdata_address_n;
+                                    
+                                    end
+                                
+                                end//2-Bytes
+                                
+                                3'b001: begin
+                                
+                                    RDATA[7 : 0]       = slave_memory[readdata_address];
+                                    readdata_address_n = readdata_address + 1;
+                                    
+                                    if(readdata_address_n % wrap_boundary2 == 0)
+                                    begin
+                                    
+                                        readdata_address_r = readdata_address_n - wrap_boundary2; 
+                                    
+                                    end
+                                    else begin
+                                    
+                                        readdata_address_r = readdata_address_n;
+                                    
+                                    end
+                                    
+                                    RDATA[15 : 8]       = slave_memory[readdata_address_r];
+                                    readdata_address_n  = readdata_address_r + 1;
+                                    
+                                    if(readdata_address_n % wrap_boundary2 == 0)
+                                    begin
+                                    
+                                        readdata_address_r = readdata_address_n - wrap_boundary2; 
+                                    
+                                    end
+                                    else begin
+                                    
+                                        readdata_address_r = readdata_address_n;
+                                    
+                                    end
+                                    
+                                    RDATA[23 : 16]       = slave_memory[readdata_address_r];
+                                    readdata_address_n   = readdata_address_r + 1;
+                                    
+                                    if(readdata_address_n % wrap_boundary2 == 0)
+                                    begin
+                                    
+                                        readdata_address_r = readdata_address_n - wrap_boundary2; 
+                                    
+                                    end
+                                    else begin
+                                    
+                                        readdata_address_r = readdata_address_n;
+                                    
+                                    end
+                                    
+                                    RDATA[31 : 24]       = slave_memory[readdata_address_r];
+                                    readdata_address_n   = readdata_address_r + 1;
+                                    
+                                    if(readdata_address_n % wrap_boundary2 == 0)
+                                    begin
+                                    
+                                        readdata_address_r = readdata_address_n - wrap_boundary2; 
+                                    
+                                    end
+                                    else begin
+                                    
+                                        readdata_address_r = readdata_address_n;
+                                    
+                                    end
+                                
+                                end//4-Bytes
+                            
+                            endcase//ARSIZE
+                        
+                        end//Wrapping
                     
                     endcase//ARBURST
+                    
+                    RVALID       = 1'b1;
+                    counter_next = counter + 5'b1;
+                    DRState_Next = DRSLAVE_WAIT;
+                    RRESP        = 2'b00;
                 
                 end//end if
+                else begin
+                
+                    if(ARSIZE >= 3'b011)
+                    begin
+                    
+                        RRESP        = 2'b10;
+                    
+                    end
+                    else begin
+                    
+                        RRESP        = 2'b11;
+                    
+                    end
+                    
+                    counter_next = counter + 5'b1;
+                    DRState_Next = DRSLAVE_ERROR;
+                
+                end
             
             end//DRSLAVE_START
+            
+            DRSLAVE_WAIT: begin
+            
+                if(RREADY)
+                begin
+                    
+                    if(counter_next == ARLEN + 1)
+                    begin
+                        
+                        RLAST = 1'b1;
+                    
+                    end
+                    else begin
+                    
+                        RLAST = 1'b0;
+                        
+                    end
+                
+                    DRState_Next = DRSLAVE_VALID;
+                    
+                end
+                else begin
+                
+                    DRState_Next = DRSLAVE_WAIT;
+                
+                end
+            
+            end//DRSLAVE_WAIT
+            
+            DRSLAVE_VALID: begin
+            
+                RVALID = 1'b0;
+                
+                if(counter_next == ARLEN + 1)
+                begin
+                
+                    DRState_Next = DRSLAVE_CLEAR;
+                    RLAST        = 1'b1;
+                
+                end
+                else begin
+                
+                    readdata_address = readdata_address_r;
+                    DRState_Next     = DRSLAVE_START;
+                
+                end
+            
+            end//DRSLAVE_VALID
+            
+            DRSLAVE_ERROR: begin
+            
+                if(counter_next == ARLEN + 1)
+                begin
+                
+                    DRState_Next = DRSLAVE_VALID;
+                    RLAST        = 1'b1;
+                
+                end    
+                else begin
+                
+                    DRState_Next = DRSLAVE_START;
+                    RLAST        = 1'b0;
+                
+                end 
+            
+            end
         
         endcase//DRState
     
