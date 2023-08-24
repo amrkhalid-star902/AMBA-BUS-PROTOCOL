@@ -1,5 +1,6 @@
-
 `timescale 1ns / 1ps
+
+
 
 module AXI_Master#(
 
@@ -33,8 +34,8 @@ parameter MEMSIZE = 4096
     output reg               WVALID,
     
     //Signals of the Write Response channel
-    input                    BID,
-    input                    BRESP,
+    input [(DATAW/8)-1 : 0]  BID,
+    input [SIZE-2 : 0]       BRESP,
     input                    BVALID,
     output reg               BREADY,
     
@@ -51,7 +52,7 @@ parameter MEMSIZE = 4096
     //Signals of the Read Data channels
     output reg [(DATAW/8)-1 : 0] RID,
     input [DATAW-1 : 0]      RDATA,
-    input                    RRESP,
+    input [SIZE-2 : 0]       RRESP,
     input                    RLAST,
     input                    RVALID,
     output reg               RREADY,
@@ -1030,7 +1031,8 @@ parameter MEMSIZE = 4096
         endcase
      
      end
-  
+
+    
 endmodule
 
 
