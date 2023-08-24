@@ -1235,7 +1235,246 @@ parameter MEMSIZE = 4096
     always@(*)
     begin
     
+        case(RBState)
+        
+            RBSLAVE_IDLE: begin
+            
+                BID    = {(DATAW/8){1'b0}};
+                BRESP  = {(SIZE-1){1'b0}};
+                BVALID = 1'b0;
+                RBState_Next = RBSLAVE_LAST;
+            
+            end
+            
+            RBSLAVE_LAST: begin
+            
+                if(WLAST)
+                begin
+                
+                    RBState_Next = RBSLAVE_START;
+                
+                end
+                else begin
+                
+                   RBState_Next = RBSLAVE_LAST; 
+                
+                end
+            
+            end
+            
+            RBSLAVE_START: begin
+            
+                BID = AWID;
+                
+                if(AWADDR > 32'h5ff && AWADDR <= 32'hfff && AWSIZE < 3'b011)
+                begin
+                
+                    //Normal access success. Indicates that a normal access has been successful
+                    BRESP = 2'b00;
+                
+                end
+                else if(AWADDR > 32'h1ff && AWADDR <= 32'h5ff || AWSIZE > 3'b010)
+                begin
+                
+                    //Slave error. Used when the access has reached the slave successfully, but the slave address is out of range 
+                    BRESP = 2'b10;
+                
+                end
+                else begin
+                    
+                    //Decode error
+                    BRESP = 2'b11;
+                
+                end
+                
+                BVALID = 1'b1;
+                RBState_Next = RBSLAVE_WAIT;
+            
+            end
+            
+            RBSLAVE_WAIT: begin
+            
+                if(BREADY)
+                begin
+                
+                   RBState_Next = RBSLAVE_IDLE; 
+                
+                end
+            
+            end
+            
+        endcase//RBState
     
+    end
+    
+    /************************* FSM for Read Address Channel *************************/
+    always@(posedge clk or negedge reset)
+    begin
+    
+        if(!reset)
+        begin
+        
+            ARState <= ARSLAVE_IDLE;
+        
+        end
+        else begin
+        
+            ARState <= ARState_Next;
+        
+        end
+    
+    end
+    
+    always@(*)
+    begin
+    
+        case(ARState)
+        
+            ARSLAVE_IDLE: begin
+            
+                ARREADY      = 1'b0;
+                ARState_Next = ARSLAVE_WAIT; 
+            
+            end
+            
+            ARSLAVE_WAIT: begin
+                
+                if(ARVALID)
+                begin
+                
+                   ARState_Next = ARSLAVE_READY; 
+                
+                end
+                else begin
+                    
+                   ARState_Next = ARSLAVE_WAIT; 
+                
+                end
+            
+            end
+            
+            ARSLAVE_READY: begin
+                
+                ARState_Next = ARSLAVE_IDLE;
+                ARREADY      = 1'b1;
+            
+            end
+        
+        endcase
+    
+    end
+    
+    /************************* FSM for Read Data Channel *************************/
+    always@(posedge clk or negedge reset)
+    begin
+    
+        if(!reset)
+        begin
+        
+            DRState     <= DRSLAVE_CLEAR;
+            counter     <= 5'b0;
+        
+        end
+        else begin
+        
+            DRState     <= DRState_Next;
+            counter     <= counter_next;
+            first_time2 <= first_time2_next;
+        
+        end
+    
+    end
+    
+    always@(*)
+    begin
+    
+        if(ARVALID)
+        begin
+        
+            ARADDR_r = ARADDR;
+        
+        end
+        
+        case(DRState)
+        
+            DRSLAVE_CLEAR: begin
+            
+                RID     = {(DATAW/8){1'b0}};
+                RDATA   = {DATAW{1'b0}};
+                RRESP   = {(SIZE-1){1'b0}};
+                RLAST   = 1'b0;
+                
+                counter_next       = 5'b0;
+                readdata_address   = 32'h0;
+                readdata_address_r = 32'h0;
+                first_time2_next   = 1'b0;
+                
+                if(ARVALID)
+                begin
+                
+                   DRState_Next =  DRSLAVE_START;
+                
+                end
+                else begin
+                
+                    DRState_Next =  DRSLAVE_CLEAR;
+                
+                end
+            
+            end//DRSLAVE_CLEAR
+            
+            DRSLAVE_START: begin
+            
+                if(ARADDR > 32'h1ff && ARADDR <= 32'hfff && ARSIZE < 3'b100)
+                begin
+                
+                    RID = ARID;
+                    case(ARBURST)
+                    
+                        2'b00: begin
+                        
+                            readdata_address = ARADDR;
+                            case(ARSIZE)
+                            
+                                3'b000: begin
+                                
+                                    RDATA[7 : 0] = slave_memory[readdata_address];
+                                
+                                end
+                                
+                                3'b001: begin
+                                
+                                    RDATA[7 : 0]  = slave_memory[readdata_address];
+                                    RDATA[15 : 8] = slave_memory[readdata_address + 1];
+                                
+                                end
+                                
+                                3'b010: begin
+                                
+                                    RDATA[7 : 0]   = slave_memory[readdata_address];
+                                    RDATA[15 : 8]  = slave_memory[readdata_address + 1];
+                                    RDATA[23 : 16] = slave_memory[readdata_address + 2];
+                                    RDATA[31 : 24] = slave_memory[readdata_address + 3];
+                                
+                                end
+                            
+                            endcase//ARSIZE
+                        
+                        end//Fixed
+                        
+                        2'b01: begin
+                        
+                            
+                        
+                        end
+                    
+                    endcase//ARBURST
+                
+                end//end if
+            
+            end//DRSLAVE_START
+        
+        endcase//DRState
     
     end
     
